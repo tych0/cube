@@ -1,0 +1,17 @@
+language: go
+sudo: false
+go_import_path: github.com/atom-deps/cube
+
+matrix:
+  include:
+    - go: 1.9.1
+      env: LINT=1
+
+cache:
+  directories:
+    - vendor
+install:
+  - make dependencies
+script:
+  - test "$LINT" -eq 1 && make lint || echo "Skipping lint"
+  - make ci
