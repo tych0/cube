@@ -1,8 +1,8 @@
-hash: 64f53ab03c1df16360199e78031ce45c6a46549ca1d69edc2ee8d691eaa04c41
-updated: 2017-10-27T22:03:52.10207832-07:00
+hash: c8ae7d40770693aed008570a5388f26f0e15ce88b75ec009c3924cca82ddbdec
+updated: 2017-10-30T19:57:43.110580734-07:00
 imports:
-- name: github.com/atom-deps/zlog
-  version: 15bfff95e49ff56d694ac60da0d8f14d59804986
+- name: github.com/anuvu/zlog
+  version: 47b9d0cffd75341a236288887f54a82eb8ed402a
 - name: github.com/satori/go.uuid
   version: 5bf94b69c6b68ee1b541973bb8e1144db23a194b
 testImports:

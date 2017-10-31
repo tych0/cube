@@ -1,6 +1,6 @@
-package: github.com/atom-deps/cube
+package: github.com/anuvu/cube
 import:
-- package: github.com/atom-deps/zlog
+- package: github.com/anuvu/zlog
 - package: github.com/satori/go.uuid
 testImport:
 - package: github.com/smartystreets/goconvey/convey

@@ -13,13 +13,13 @@ Cube is a application server framework to develop server applications in golang.
 * Metrics
 
 [doc-img]: http://img.shields.io/badge/GoDoc-Reference-blue.svg
-[doc]: https://godoc.org/github.com/atom-deps/cube
+[doc]: https://godoc.org/github.com/anuvu/cube
 
-[ci-img]: https://img.shields.io/travis/atom-deps/cube/master.svg
+[ci-img]: https://img.shields.io/travis/anuvu/cube/master.svg
 [ci]: https://travis-ci.org/uber-go/dig/branches
 
-[cov-img]: https://codecov.io/gh/atom-deps/cube/branch/master/graph/badge.svg
-[cov]: https://codecov.io/gh/atom-deps/cube/branch/master
+[cov-img]: https://codecov.io/gh/anuvu/cube/branch/master/graph/badge.svg
+[cov]: https://codecov.io/gh/anuvu/cube/branch/master
 
-[report-card-img]: https://goreportcard.com/badge/github.com/atom-deps/cube
-[report-card]: https://goreportcard.com/report/github.com/atom-deps/cube
+[report-card-img]: https://goreportcard.com/badge/github.com/anuvu/cube
+[report-card]: https://goreportcard.com/report/github.com/anuvu/cube
