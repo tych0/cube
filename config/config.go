@@ -12,6 +12,9 @@ type Store interface {
 	// Get returns the configuration for the specified key or error if the key is not
 	// found in the store
 	Get(name string) (interface{}, error)
+
+	// Registry returns the registry used by this store
+	Registry() Registry
 }
 
 // Registry provides an interface for services to register their configuration types.
