@@ -6,11 +6,14 @@ import "fmt"
 // Store provides a configuration store interface. Services can register their
 // configuration types and can retrieve their configuration.
 type Store interface {
-	// Loads the configuration
-	Load() error
+	// Open creates the resources like db connections or files required by the store.
+	Open() error
+
+	// Close releases any underlying resources used by the store.
+	Close()
 
 	// Get returns the configuration for the specified key or error if the key is not
-	// found in the store
+	// found in the store.
 	Get(name string) (interface{}, error)
 
 	// Registry returns the registry used by this store
