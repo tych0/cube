@@ -1,6 +1,8 @@
 package config
 
 import (
+	"encoding/json"
+	"fmt"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
@@ -8,6 +10,19 @@ import (
 
 type httpConfig struct {
 	Port int `json:"port"`
+}
+
+func (h *httpConfig) UnmarshalJSON(b []byte) error {
+	v := map[string]int{}
+	if e := json.Unmarshal(b, &v); e != nil {
+		return e
+	}
+	if p, ok := v["port"]; ok {
+		h.Port = p
+	} else {
+		return fmt.Errorf("port must be present")
+	}
+	return nil
 }
 
 func TestJSONStore(t *testing.T) {
@@ -19,6 +34,7 @@ func TestJSONStore(t *testing.T) {
 			So(s.Load(), ShouldBeError)
 		})
 
+		// Contents of cfg_test: {"http": {"port": 8080}}
 		s := NewJSONStore("cfg_test.json", r)
 		So(s, ShouldNotBeNil)
 		So(s.Registry(), ShouldEqual, r)
@@ -46,8 +62,14 @@ func TestBadJSON(t *testing.T) {
 		r := NewRegistry()
 		So(r.Register("http", httpConfig{}), ShouldBeNil)
 		Convey("should be a json parse error", func() {
+			// Contents of bad_cfg.json: {"http": {"portx": "8080"}
 			s := NewJSONStore("bad_cfg.json", r)
 			So(s.Load(), ShouldBeError)
+			Convey("should error out on bad http config", func() {
+				e := s.(*jsonStore).processData([]byte(`{"http": {"portx": "8080"}}`))
+				So(e, ShouldNotBeNil)
+				fmt.Println(s.Get("http"))
+			})
 		})
 	})
 }

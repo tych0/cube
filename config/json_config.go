@@ -40,17 +40,25 @@ func (j *jsonStore) Registry() Registry {
 	return j.reg
 }
 
+type cfgData struct {
+	b []byte
+}
+
+func (d *cfgData) UnmarshalJSON(b []byte) error {
+	d.b = b
+	return nil
+}
+
 func (j *jsonStore) processData(data []byte) error {
-	jsonData := map[string]map[string]interface{}{}
+	jsonData := map[string]*cfgData{}
 	if e := json.Unmarshal(data, &jsonData); e != nil {
 		return e
 	}
 	for k, v := range jsonData {
 		t := j.reg.Get(k)
 		if t != nil {
-			b, _ := json.Marshal(v)
 			val := reflect.New(t).Interface()
-			if e := json.Unmarshal(b, val); e != nil {
+			if e := json.Unmarshal(v.b, val); e != nil {
 				return e
 			}
 			j.kv[k] = val
