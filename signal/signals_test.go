@@ -2,6 +2,7 @@ package cube
 
 import (
 	"os"
+	"sync"
 	"syscall"
 	"testing"
 	"time"
@@ -12,10 +13,23 @@ import (
 
 type sigH struct {
 	s []os.Signal
+	l *sync.RWMutex
 }
 
 func (s *sigH) handle(sig os.Signal) {
+	s.l.Lock()
 	s.s = append(s.s, sig)
+	s.l.Unlock()
+}
+
+func (s *sigH) Len() int {
+	s.l.RLock()
+	defer s.l.RUnlock()
+	return len(s.s)
+}
+
+func (s *sigH) Sig(i int) os.Signal {
+	return s.s[i]
 }
 
 func TestSignals(t *testing.T) {
@@ -39,7 +53,7 @@ func TestSignals(t *testing.T) {
 		})
 
 		Convey("Should be able to start the service", func() {
-			sh := &sigH{[]os.Signal{}}
+			sh := &sigH{[]os.Signal{}, &sync.RWMutex{}}
 			s.Handle(syscall.SIGINT, sh.handle)
 			So(s.IsHandled(syscall.SIGINT), ShouldBeTrue)
 			So(len(sh.s), ShouldEqual, 0)
@@ -60,8 +74,8 @@ func TestSignals(t *testing.T) {
 
 				// Sleep for a second
 				time.Sleep(time.Second)
-				So(len(sh.s), ShouldEqual, 1)
-				So(sh.s[0], ShouldEqual, syscall.SIGINT)
+				So(sh.Len(), ShouldEqual, 1)
+				So(sh.Sig(0), ShouldEqual, syscall.SIGINT)
 			})
 
 			Convey("Should be able to stop the service", func() {

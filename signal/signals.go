@@ -3,6 +3,7 @@ package cube
 import (
 	"os"
 	"os/signal"
+	"sync"
 
 	"context"
 )
@@ -35,6 +36,7 @@ type sh struct {
 	ctx        context.Context
 	cancelFunc context.CancelFunc
 	running    bool
+	lock       *sync.RWMutex
 }
 
 // NewSignalRouter returns a signal router.
@@ -47,32 +49,43 @@ func NewSignalRouter() SignalRouter {
 		ctx:        ctx,
 		cancelFunc: cancelFunc,
 		running:    false,
+		lock:       &sync.RWMutex{},
 	}
 }
 
 func (s *sh) Handle(sig os.Signal, h SignalHandler) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 	s.signals[sig] = h
 	signal.Notify(s.signalCh, sig)
 	delete(s.ignSignals, sig)
 }
 
 func (s *sh) Reset(sig os.Signal) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 	delete(s.signals, sig)
 	signal.Reset(sig)
 }
 
 func (s *sh) Ignore(sig os.Signal) {
+	s.lock.Lock()
+	defer s.lock.Unlock()
 	delete(s.signals, sig)
 	signal.Ignore(sig)
 	s.ignSignals[sig] = struct{}{}
 }
 
 func (s *sh) IsHandled(sig os.Signal) bool {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
 	_, ok := s.signals[sig]
 	return ok
 }
 
 func (s *sh) IsIgnored(sig os.Signal) bool {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
 	_, ok := s.ignSignals[sig]
 	return ok
 }
@@ -82,6 +95,8 @@ func (s *sh) IsIgnored(sig os.Signal) bool {
 func (s *sh) OnStart() error {
 	go func() {
 		defer func() {
+			s.lock.Lock()
+			defer s.lock.Unlock()
 			s.running = false
 		}()
 		// This go routine dies with the server
@@ -91,13 +106,19 @@ func (s *sh) OnStart() error {
 				// We are done exit.
 				return
 			case sig := <-s.signalCh:
-				if h, ok := s.signals[sig]; ok {
-					h(sig)
-				}
+				func() {
+					s.lock.RLock()
+					defer s.lock.RUnlock()
+					if h, ok := s.signals[sig]; ok {
+						h(sig)
+					}
+				}()
 			}
 		}
 	}()
+	s.lock.Lock()
 	s.running = true
+	s.lock.Unlock()
 	return nil
 }
 
@@ -111,5 +132,7 @@ func (s *sh) OnConfigure(cfg interface{}) error {
 }
 
 func (s *sh) IsHealthy() bool {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
 	return s.running
 }
