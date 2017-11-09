@@ -1,6 +1,6 @@
 language: go
 sudo: false
-go_import_path: github.com/atom-deps/cube
+go_import_path: github.com/anuvu/cube
 
 matrix:
   include:
