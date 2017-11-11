@@ -29,7 +29,7 @@ type SignalRouter interface {
 	IsIgnored(sig os.Signal) bool
 }
 
-type sh struct {
+type router struct {
 	signalCh   chan os.Signal
 	signals    map[os.Signal]SignalHandler
 	ignSignals map[os.Signal]struct{}
@@ -42,7 +42,7 @@ type sh struct {
 // NewSignalRouter returns a signal router.
 func NewSignalRouter() SignalRouter {
 	ctx, cancelFunc := context.WithCancel(context.Background())
-	return &sh{
+	return &router{
 		signalCh:   make(chan os.Signal),
 		signals:    make(map[os.Signal]SignalHandler),
 		ignSignals: make(map[os.Signal]struct{}),
@@ -53,7 +53,7 @@ func NewSignalRouter() SignalRouter {
 	}
 }
 
-func (s *sh) Handle(sig os.Signal, h SignalHandler) {
+func (s *router) Handle(sig os.Signal, h SignalHandler) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	s.signals[sig] = h
@@ -61,14 +61,14 @@ func (s *sh) Handle(sig os.Signal, h SignalHandler) {
 	delete(s.ignSignals, sig)
 }
 
-func (s *sh) Reset(sig os.Signal) {
+func (s *router) Reset(sig os.Signal) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	delete(s.signals, sig)
 	signal.Reset(sig)
 }
 
-func (s *sh) Ignore(sig os.Signal) {
+func (s *router) Ignore(sig os.Signal) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	delete(s.signals, sig)
@@ -76,14 +76,14 @@ func (s *sh) Ignore(sig os.Signal) {
 	s.ignSignals[sig] = struct{}{}
 }
 
-func (s *sh) IsHandled(sig os.Signal) bool {
+func (s *router) IsHandled(sig os.Signal) bool {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 	_, ok := s.signals[sig]
 	return ok
 }
 
-func (s *sh) IsIgnored(sig os.Signal) bool {
+func (s *router) IsIgnored(sig os.Signal) bool {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 	_, ok := s.ignSignals[sig]
@@ -92,7 +92,7 @@ func (s *sh) IsIgnored(sig os.Signal) bool {
 
 // Implement service lifecycle receivers
 
-func (s *sh) OnStart() error {
+func (s *router) OnStart() error {
 	go func() {
 		defer func() {
 			s.lock.Lock()
@@ -122,16 +122,16 @@ func (s *sh) OnStart() error {
 	return nil
 }
 
-func (s *sh) OnStop() error {
+func (s *router) OnStop() error {
 	s.cancelFunc()
 	return nil
 }
 
-func (s *sh) OnConfigure(cfg interface{}) error {
+func (s *router) OnConfigure(cfg interface{}) error {
 	return nil
 }
 
-func (s *sh) IsHealthy() bool {
+func (s *router) IsHealthy() bool {
 	s.lock.RLock()
 	defer s.lock.RUnlock()
 	return s.running

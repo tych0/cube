@@ -67,10 +67,7 @@ func TestSignals(t *testing.T) {
 
 			Convey("Should be able to handle a signal", func() {
 				// Fire a signal
-				p, err := os.FindProcess(os.Getpid())
-				So(err, ShouldBeNil)
-				So(p, ShouldNotBeNil)
-				p.Signal(syscall.SIGINT)
+				s.(*router).signalCh <- syscall.SIGINT
 
 				// Sleep for a second
 				time.Sleep(time.Second)
