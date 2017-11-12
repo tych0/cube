@@ -1,6 +1,6 @@
 BENCH_FLAGS ?= -cpuprofile=cpu.pprof -memprofile=mem.pprof -benchmem
 PKGS ?= $(shell glide novendor | grep -v examples)
-PKG_FILES ?= *.go
+PKG_FILES ?= $(shell find . --name *.go | grep -v vendor)
 GO_VERSION := $(shell go version | cut -d " " -f 3)
 
 .PHONY: all
@@ -11,26 +11,17 @@ dependencies:
 	@echo "Installing Glide and locked dependencies..."
 	glide --version || go get -u -f github.com/Masterminds/glide
 	glide install
-ifdef SHOULD_LINT
-	@echo "Installing golint..."
-	go install ./vendor/github.com/golang/lint/golint
-else
-	@echo "Not installing golint, since we don't expect to lint on" $(GO_VERSION)
-endif
+	@echo "Installing gometalineter"
+	gometalinter --version || go get -u -f github.com/alecthomas/gometalinter && gometalinter --install
+	gometalinter --install
 
 .PHONY: lint
 lint:
 	@rm -rf lint.log
 	@echo "Checking formatting..."
-	@gofmt -d -s $(PKG_FILES) 2>&1 | tee lint.log
-	@echo "Installing test dependencies for vet..."
-	@go test -i $(PKGS)
-	@echo "Checking vet..."
-	@$(foreach dir,$(PKG_FILES),go tool vet $(VET_RULES) $(dir) 2>&1 | tee -a lint.log;)
-	@echo "Checking lint..."
-	@$(foreach dir,$(PKGS),golint $(dir) 2>&1 | tee -a lint.log;)
-	@echo "Checking for unresolved FIXMEs..."
-	@git grep -i fixme | grep -v -e vendor -e Makefile | tee -a lint.log
+	@$(foreach dir,$(PKGS_FILES),gofmt -d -s $(dir) 2>&1 | tee -a lint.log;)
+	@echo "Running gometalinter"
+	@$(foreach dir,$(PKGS),gometalinter --disable-all --enable=golint --enable=vet $(dir) 2>&1 | tee -a lint.log;)
 	@[ ! -s lint.log ]
 
 .PHONY: test
