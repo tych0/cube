@@ -39,12 +39,12 @@ type router struct {
 }
 
 // NewSignalRouter returns a signal router.
-func NewSignalRouter(srvCtx service.Context) Router {
+func NewSignalRouter(ctx service.Context) Router {
 	return &router{
 		signalCh:   make(chan os.Signal),
 		signals:    make(map[os.Signal]Handler),
 		ignSignals: make(map[os.Signal]struct{}),
-		ctx:        srvCtx,
+		ctx:        ctx,
 		running:    false,
 		lock:       &sync.RWMutex{},
 	}
