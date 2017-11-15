@@ -4,7 +4,7 @@ import (
 	"github.com/anuvu/dig"
 )
 
-// Group is a struct
+// Group is a group of services, that have inter-dependencies.
 type Group struct {
 	name      string
 	parent    *Group
