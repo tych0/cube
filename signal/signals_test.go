@@ -1,4 +1,4 @@
-package cube
+package signal
 
 import (
 	"os"
@@ -34,7 +34,7 @@ func (s *sigH) Sig(i int) os.Signal {
 
 func TestSignals(t *testing.T) {
 	Convey("Create a signal Router", t, func() {
-		s := NewSignalRouter()
+		s := NewSignalRouter(service.NewContext())
 		So(s, ShouldNotBeNil)
 		Convey("Should be able add handler", func() {
 			So(s.IsIgnored(syscall.SIGINT), ShouldBeFalse)
@@ -58,12 +58,9 @@ func TestSignals(t *testing.T) {
 			So(s.IsHandled(syscall.SIGINT), ShouldBeTrue)
 			So(len(sh.s), ShouldEqual, 0)
 			// Check lifecycle
-			svc := s.(service.LifeCycle)
-			So(svc, ShouldNotBeNil)
-			So(svc.OnConfigure(nil), ShouldBeNil)
-			So(svc.IsHealthy(), ShouldBeFalse)
-			svc.OnStart()
-			So(svc.IsHealthy(), ShouldBeTrue)
+			So(IsHealthy(s), ShouldBeFalse)
+			StartRouter(s)
+			So(IsHealthy(s), ShouldBeTrue)
 
 			Convey("Should be able to handle a signal", func() {
 				// Fire a signal
@@ -76,10 +73,10 @@ func TestSignals(t *testing.T) {
 			})
 
 			Convey("Should be able to stop the service", func() {
-				So(svc.IsHealthy(), ShouldBeTrue)
-				So(svc.OnStop(), ShouldBeNil)
+				So(IsHealthy(s), ShouldBeTrue)
+				So(StopRouter(s), ShouldBeNil)
 				time.Sleep(time.Second)
-				So(svc.IsHealthy(), ShouldBeFalse)
+				So(IsHealthy(s), ShouldBeFalse)
 			})
 		})
 	})

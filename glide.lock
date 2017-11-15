@@ -1,14 +1,8 @@
-hash: c8ae7d40770693aed008570a5388f26f0e15ce88b75ec009c3924cca82ddbdec
-updated: 2017-11-08T17:46:33.188735058-08:00
+hash: 36e55a4f0d99512271f5ca9710d6cfc005909f0f615713c6156ba694c8a9a56a
+updated: 2017-11-14T22:34:51.955183-08:00
 imports:
 - name: github.com/anuvu/zlog
   version: ff66b04dc983fbecb5f3e0dc7d80e74c69984035
-- name: github.com/rs/zerolog
-  version: 9d194eb6f50e8718a6d6f8f1e1f0bf3ddf4065f1
-  subpackages:
-  - internal/json
-- name: github.com/satori/go.uuid
-  version: 5bf94b69c6b68ee1b541973bb8e1144db23a194b
 testImports:
 - name: github.com/gopherjs/gopherjs
   version: a0a7cfed7b2a54080888fd2b3d4a3ec14562c86c
