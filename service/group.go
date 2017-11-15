@@ -4,6 +4,7 @@ import (
 	"github.com/anuvu/dig"
 )
 
+// Group is a struct
 type Group struct {
 	name      string
 	parent    *Group

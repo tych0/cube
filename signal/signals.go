@@ -40,7 +40,7 @@ type router struct {
 
 // NewSignalRouter returns a signal router.
 func NewSignalRouter(ctx service.Context) Router {
-	return &router{
+    r := &router{
 		signalCh:   make(chan os.Signal),
 		signals:    make(map[os.Signal]Handler),
 		ignSignals: make(map[os.Signal]struct{}),
@@ -48,6 +48,14 @@ func NewSignalRouter(ctx service.Context) Router {
 		running:    false,
 		lock:       &sync.RWMutex{},
 	}
+    // Hooking Signal Router to the ctx
+    ctx.AddHook(&service.Lifecycle{
+        StartHook: StartRouter,
+        StopHook: StopRouter,
+        ConfigHook: nil,
+        HealthHook: func() bool { return IsHealthy(r) },
+    })
+    return r
 }
 
 func (s *router) Handle(sig os.Signal, h Handler) {
