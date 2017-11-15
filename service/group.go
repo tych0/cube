@@ -61,10 +61,10 @@ func (g *Group) Configure() error {
 // If an error occurs on any hook, subsequent start calls are abandoned
 // and a best effort stop is initiated.
 func (g *Group) Start() error {
-	for _, h := range g.ctx.hooks {
+	for i, h := range g.ctx.hooks {
 		if h.StartHook != nil {
 			if err := g.container.Invoke(h.StartHook); err != nil {
-				defer g.Stop()
+				defer g.stop(i + 1)
 				return err
 			}
 		}
@@ -75,7 +75,11 @@ func (g *Group) Start() error {
 // Stop calls the stop hooks on all services registered for shutdown.
 func (g *Group) Stop() error {
 	// Invoke the stop hooks in the reverse dependency order
-	for i := len(g.ctx.hooks); i > 0; {
+	return g.stop(len(g.ctx.hooks))
+}
+
+func (g *Group) stop(index int) error {
+	for i := index; i > 0; {
 		i--
 		h := g.ctx.hooks[i]
 		if h.StopHook != nil {
