@@ -32,47 +32,32 @@ type loggerConfig struct {
 
 func TestJSONStore(t *testing.T) {
 	Convey("On a json store", t, func() {
-		r := NewRegistry()
-		So(r.Register("http", httpConfig{}), ShouldBeNil)
-
 		goodJSON := strings.NewReader(`{"http": {"port": 8080}}
 			{"logger": {"file": "/var/log/test.log"}}`)
-		s := NewJSONStore(goodJSON, r)
+		s := NewJSONStore(goodJSON)
 		So(s, ShouldNotBeNil)
-		So(s.Registry(), ShouldEqual, r)
 		defer s.Close()
 		Convey("Should be able to load the file", func() {
 			So(s.Open(), ShouldBeNil)
 			Convey("should be able load http config", func() {
-				v, err := s.Get("http")
+				cfg := &httpConfig{}
+				err := s.Get("http", cfg)
 				So(err, ShouldBeNil)
-				So(v, ShouldNotBeNil)
-				cfg := v.(*httpConfig)
 				So(cfg, ShouldNotBeNil)
 				So(cfg.Port, ShouldEqual, 8080)
 			})
 			Convey("should not find randon config", func() {
-				v, err := s.Get("some_random_key")
+				err := s.Get("some_random_key", nil)
 				So(err, ShouldBeError)
-				So(v, ShouldBeNil)
-			})
-			Convey("should not be able to find unregistered logger type", func() {
-				v, err := s.Get("logger")
-				So(err, ShouldBeError)
-				So(v, ShouldBeNil)
 			})
 			Convey("should not be able to find wrong logger type", func() {
-				So(r.Register("logger", &httpConfig{}), ShouldBeNil)
-				v, err := s.Get("logger")
+				err := s.Get("logger", &httpConfig{})
 				So(err, ShouldBeError)
-				So(v, ShouldBeNil)
 			})
-			Convey("should be able to find logger after registering the type", func() {
-				So(r.Register("logger", &loggerConfig{}), ShouldBeNil)
-				v, err := s.Get("logger")
+			Convey("should be able to find logger", func() {
+				cfg := &loggerConfig{}
+				err := s.Get("logger", cfg)
 				So(err, ShouldBeNil)
-				So(v, ShouldNotBeNil)
-				cfg := v.(*loggerConfig)
 				So(cfg, ShouldNotBeNil)
 				So(cfg.File, ShouldEqual, "/var/log/test.log")
 			})
@@ -82,18 +67,17 @@ func TestJSONStore(t *testing.T) {
 
 func TestBadJSON(t *testing.T) {
 	Convey("Load bad json data", t, func() {
-		r := NewRegistry()
-		So(r.Register("http", httpConfig{}), ShouldBeNil)
 		Convey("should be a json parse error", func() {
 			badJSON := strings.NewReader(`{"http": {"portx": "8080"}`)
-			s := NewJSONStore(badJSON, r)
+			s := NewJSONStore(badJSON)
 			So(s.Open(), ShouldBeError)
 		})
 
 		Convey("should error out on bad http config", func() {
 			badKeyJSON := strings.NewReader(`{"http": {"portx": "8080"}}`)
-			s := NewJSONStore(badKeyJSON, r)
-			So(s.Open(), ShouldNotBeNil)
+			s := NewJSONStore(badKeyJSON)
+			So(s.Open(), ShouldBeNil)
+			So(s.Get("http", &httpConfig{}), ShouldBeError)
 		})
 	})
 }
