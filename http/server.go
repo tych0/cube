@@ -2,6 +2,7 @@ package http
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 
 	"github.com/anuvu/cube/config"
@@ -50,14 +51,21 @@ func (s *server) ConfigHook(store config.Store) error {
 
 func (s *server) StartHook() error {
 	s.server = http.Server{Addr: fmt.Sprintf("localhost:%d", s.port), Handler: s.mux}
+	started := make(chan bool)
 	go func() {
-		s.running = true
-		err := s.server.ListenAndServe()
+		l, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", s.port))
+		started <- true
 		if err != nil {
+			fmt.Println("failed to listen\n");
+			return
+		}
+		s.running = true
+		if err := s.server.Serve(l); err != nil {
 			fmt.Println("serve failed %v", err)
 		}
 		s.running = false
 	}()
+	<-started
 	return nil
 }
 
