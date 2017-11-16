@@ -25,7 +25,6 @@ type staticServer struct {
 }
 
 func (s *staticServer) ConfigHook(store config.Store) error {
-	panic("foo")
 	if err := store.Get("staticURL", &s.url); err != nil {
 		return err
 	}
