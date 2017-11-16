@@ -49,7 +49,6 @@ func (s *server) ConfigHook(store config.Store) error {
 }
 
 func (s *server) StartHook() error {
-	fmt.Println("hello world")
 	s.server = http.Server{Addr: fmt.Sprintf("localhost:%d", s.port), Handler: s.mux}
 	go func() {
 		s.running = true
